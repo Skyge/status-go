@@ -180,9 +180,6 @@ type NodeConfig struct {
 
 	// DataDir is the file system folder the node should use for any data storage needs.
 	DataDir string `validate:"required"`
-	// BackupDisabledDataDir is the file system folder the node should use for any data storage needs that it doesn't want backed up.
-	BackupDisabledDataDir string `validate:"required"`
-	PFSEnabled            bool
 
 	// KeyStoreDir is the file system folder that contains private keys.
 	KeyStoreDir string `validate:"required"`
@@ -281,6 +278,9 @@ type NodeConfig struct {
 	// WhisperConfig extra configuration for SHH
 	WhisperConfig WhisperConfig `json:"WhisperConfig," validate:"structonly"`
 
+	// StatusServiceConfig configuration for shhext service.
+	StatusServiceConfig StatusServiceConfig `json:"StatusServiceConfig," validate:"structonly"`
+
 	// SwarmConfig extra configuration for Swarm and ENS
 	SwarmConfig SwarmConfig `json:"SwarmConfig," validate:"structonly"`
 
@@ -292,20 +292,28 @@ type NodeConfig struct {
 	// discoverable peers with the discovery limits.
 	RequireTopics map[discv5.Topic]Limits `json:"RequireTopics"`
 
-	// StatusServiceEnabled enables status service api
-	StatusServiceEnabled bool
-
-	// InstallationId id of the current installation
-	InstallationID string
-
-	// DebugAPIEnabled enables debug api
-	DebugAPIEnabled bool
-
 	// MailServerRegistryAddress is the MailServerRegistry contract address
 	MailServerRegistryAddress string
+}
 
+// StatusServiceConfig defines options used by shhext service.
+type StatusServiceConfig struct {
+	// Enabled should be true if we want to use status service.
+	Enabled bool
+	// BackupDisabledDataDir is the file system folder the node should use for any data storage needs that it doesn't want backed up.
+	BackupDisabledDataDir string `validate:"required"`
+	// InstallationId id of the current installation
+	InstallationID string
+	Debug          bool
+	PFSEnabled     bool
 	// MailServerConfirmations should be true if client wants to receive confirmatons only from a selected mail servers.
 	MailServerConfirmations bool
+	// EnableConnectionManager turns on management of the mail server connections if true.
+	EnableConnectionManager bool
+	// EnableLastUsedMonitor guarantees that last used mail server will be tracked and persisted into the storage.
+	EnableLastUsedMonitor bool
+	// ConnectionTarget will be used by connection manager. It will ensure that we connected with configured number of servers.
+	ConnectionTarget int
 }
 
 // Option is an additional setting when creating a NodeConfig
@@ -421,23 +429,22 @@ func NewNodeConfig(dataDir string, networkID uint64) (*NodeConfig, error) {
 	}
 
 	config := &NodeConfig{
-		NetworkID:             networkID,
-		DataDir:               dataDir,
-		KeyStoreDir:           keyStoreDir,
-		BackupDisabledDataDir: dataDir,
-		Version:               Version,
-		HTTPHost:              "localhost",
-		HTTPPort:              8545,
-		HTTPVirtualHosts:      []string{"localhost"},
-		ListenAddr:            ":0",
-		APIModules:            "eth,net,web3,peer",
-		MaxPeers:              25,
-		MaxPendingPeers:       0,
-		IPCFile:               "geth.ipc",
-		log:                   log.New("package", "status-go/params.NodeConfig"),
-		LogFile:               "",
-		LogLevel:              "ERROR",
-		NoDiscovery:           true,
+		NetworkID:        networkID,
+		DataDir:          dataDir,
+		KeyStoreDir:      keyStoreDir,
+		Version:          Version,
+		HTTPHost:         "localhost",
+		HTTPPort:         8545,
+		HTTPVirtualHosts: []string{"localhost"},
+		ListenAddr:       ":0",
+		APIModules:       "eth,net,web3,peer",
+		MaxPeers:         25,
+		MaxPendingPeers:  0,
+		IPCFile:          "geth.ipc",
+		log:              log.New("package", "status-go/params.NodeConfig"),
+		LogFile:          "",
+		LogLevel:         "ERROR",
+		NoDiscovery:      true,
 		UpstreamConfig: UpstreamRPCConfig{
 			URL: getUpstreamURL(networkID),
 		},
@@ -449,6 +456,9 @@ func NewNodeConfig(dataDir string, networkID uint64) (*NodeConfig, error) {
 			MinimumPoW:     WhisperMinimumPoW,
 			TTL:            WhisperTTL,
 			MaxMessageSize: whisper.DefaultMaxMessageSize,
+		},
+		StatusServiceConfig: StatusServiceConfig{
+			BackupDisabledDataDir: dataDir,
 		},
 		SwarmConfig:    SwarmConfig{},
 		RegisterTopics: []discv5.Topic{},
@@ -540,7 +550,7 @@ func (c *NodeConfig) Validate() error {
 		return fmt.Errorf("NoDiscovery is false, but ClusterConfig.BootNodes is empty")
 	}
 
-	if c.PFSEnabled && len(c.InstallationID) == 0 {
+	if c.StatusServiceConfig.PFSEnabled && len(c.StatusServiceConfig.InstallationID) == 0 {
 		return fmt.Errorf("PFSEnabled is true, but InstallationID is empty")
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/status-im/status-go/params"
 	"github.com/status-im/status-go/t/helpers"
 	whisper "github.com/status-im/whisper/whisperv6"
 	"github.com/stretchr/testify/suite"
@@ -96,9 +97,9 @@ func (s *ShhExtSuite) SetupTest() {
 			return s.whisper[i], nil
 		}))
 
-		config := &ServiceConfig{
-			InstallationID:          "1",
-			DataDir:                 directory,
+		config := params.StatusServiceConfig{
+			InstallationID:        "1",
+			BackupDisabledDataDir: directory,
 			Debug:                   true,
 			PFSEnabled:              true,
 			MailServerConfirmations: true,
@@ -195,11 +196,11 @@ func (s *ShhExtSuite) TestRequestMessagesErrors() {
 	defer func() { s.NoError(aNode.Stop()) }()
 
 	mock := newHandlerMock(1)
-	config := &ServiceConfig{
-		InstallationID: "1",
-		DataDir:        os.TempDir(),
-		Debug:          false,
-		PFSEnabled:     true,
+	config := params.StatusServiceConfig{
+		InstallationID:        "1",
+		BackupDisabledDataDir: os.TempDir(),
+		Debug:      false,
+		PFSEnabled: true,
 	}
 	service := New(shh, mock, nil, config)
 	api := NewPublicAPI(service)
@@ -261,11 +262,11 @@ func (s *ShhExtSuite) TestRequestMessagesSuccess() {
 	defer func() { err := aNode.Stop(); s.NoError(err) }()
 
 	mock := newHandlerMock(1)
-	config := &ServiceConfig{
-		InstallationID: "1",
-		DataDir:        os.TempDir(),
-		Debug:          false,
-		PFSEnabled:     true,
+	config := params.StatusServiceConfig{
+		InstallationID:        "1",
+		BackupDisabledDataDir: os.TempDir(),
+		Debug:      false,
+		PFSEnabled: true,
 	}
 	service := New(shh, mock, nil, config)
 	s.Require().NoError(service.Start(aNode.Server()))

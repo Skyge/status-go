@@ -254,12 +254,12 @@ func CreateAccount(password *C.char) *C.char {
 	}
 
 	out := AccountInfo{
-		Address:     walletAddress,
-		PubKey:      walletPubKey,
-		ChatAddress: chatAddress,
-		ChatPubKey:  chatPubKey,
-		Mnemonic:    mnemonic,
-		Error:       errString,
+		WalletAddress: walletAddress,
+		WalletPubKey:  walletPubKey,
+		ChatAddress:   chatAddress,
+		ChatPubKey:    chatPubKey,
+		Mnemonic:      mnemonic,
+		Error:         errString,
 	}
 	outBytes, _ := json.Marshal(out)
 	return C.CString(string(outBytes))
@@ -277,9 +277,9 @@ func CreateChildAccount(parentAddress, password *C.char) *C.char {
 	}
 
 	out := AccountInfo{
-		Address: address,
-		PubKey:  pubKey,
-		Error:   errString,
+		WalletAddress: address,
+		WalletPubKey:  pubKey,
+		Error:         errString,
 	}
 	outBytes, _ := json.Marshal(out)
 	return C.CString(string(outBytes))
@@ -297,12 +297,12 @@ func RecoverAccount(password, mnemonic *C.char) *C.char {
 	}
 
 	out := AccountInfo{
-		Address:     walletAddress,
-		PubKey:      walletPubKey,
-		ChatAddress: chatAddress,
-		ChatPubKey:  chatPubKey,
-		Mnemonic:    C.GoString(mnemonic),
-		Error:       errString,
+		WalletAddress: walletAddress,
+		WalletPubKey:  walletPubKey,
+		ChatAddress:   chatAddress,
+		ChatPubKey:    chatPubKey,
+		Mnemonic:      C.GoString(mnemonic),
+		Error:         errString,
 	}
 	outBytes, _ := json.Marshal(out)
 	return C.CString(string(outBytes))

@@ -69,14 +69,17 @@ func (m *Manager) CreateAccount(password string) (walletAddress, walletPubKey, c
 		return "", "", "", "", "", fmt.Errorf("can not create master extended key: %v", err)
 	}
 
-	// import created key into account keystore
+	// import the created wallet key into account keystore
 	walletAddress, walletPubKey, err = m.importExtendedKey(extkeys.KeyPurposeWallet, extKey, password)
 	if err != nil {
 		return "", "", "", "", "", err
 	}
 
-	chatAddress = walletAddress
-	chatPubKey = walletPubKey
+	// import the created chat key into account keystore
+	chatAddress, chatPubKey, err = m.importExtendedKey(extkeys.KeyPurposeChat, extKey, password)
+	if err != nil {
+		return "", "", "", "", "", err
+	}
 
 	return walletAddress, walletPubKey, chatAddress, chatPubKey, mnemonic, nil
 }
@@ -151,14 +154,17 @@ func (m *Manager) RecoverAccount(password, mnemonic string) (walletAddress, wall
 		return "", "", "", "", ErrInvalidMasterKeyCreated
 	}
 
-	// import re-created key into account keystore
+	// import the re-created wallet key into account keystore
 	walletAddress, walletPubKey, err = m.importExtendedKey(extkeys.KeyPurposeWallet, extKey, password)
 	if err != nil {
 		return
 	}
 
-	chatAddress = walletAddress
-	chatPubKey = walletPubKey
+	// import the re-created chat key into account keystore
+	chatAddress, chatPubKey, err = m.importExtendedKey(extkeys.KeyPurposeChat, extKey, password)
+	if err != nil {
+		return
+	}
 
 	return walletAddress, walletPubKey, chatAddress, chatPubKey, nil
 }
